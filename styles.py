@@ -11,7 +11,8 @@ Provides styling inspired by modern incident management tools (Datadog, Grafana,
 
 CUSTOM_CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
 
 /* ==========================================================================
    1. GLOBAL RESETS & TYPOGRAPHY
@@ -63,26 +64,39 @@ span[data-testid="stIconMaterial"],
     word-wrap: normal !important;
     direction: ltr !important;
     vertical-align: middle !important;
+    overflow: hidden !important;
+    max-width: 1.5rem !important;
     -webkit-font-feature-settings: 'liga' 1 !important;
     font-feature-settings: 'liga' 1 !important;
     -webkit-font-smoothing: antialiased !important;
 }
 
-/* Ensure expander summary flex layout separates the chevron icon from the text */
+/* Ensure expander summary flex layout cleanly separates the chevron icon from the text */
 [data-testid="stExpander"] summary {
     display: flex !important;
     align-items: center !important;
-    gap: 0.6rem !important;
 }
 
-[data-testid="stExpander"] summary span:first-child {
+[data-testid="stExpander"] summary > span {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    width: 100% !important;
+}
+
+[data-testid="stExpander"] summary > span > span:first-child {
     display: inline-flex !important;
     align-items: center !important;
     flex-shrink: 0 !important;
+    width: 1.5rem !important;
+    min-width: 1.5rem !important;
+    max-width: 1.5rem !important;
+    overflow: hidden !important;
 }
 
-[data-testid="stExpander"] summary div[data-testid="stMarkdownContainer"] {
+[data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] {
     flex-grow: 1 !important;
+    margin-left: 0.25rem !important;
 }
 
 [data-testid="stSidebarCollapseButton"] button {

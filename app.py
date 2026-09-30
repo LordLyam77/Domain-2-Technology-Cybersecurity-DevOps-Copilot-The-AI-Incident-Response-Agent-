@@ -134,7 +134,7 @@ with st.sidebar:
         "scenario_1": "Scenario 1 · Bad Deploy (Rollback)",
         "scenario_2": "Scenario 2 · Fix Fails (DB Pool)",
         "scenario_3": "Scenario 3 · Memory Leak (OOM)",
-        "scenario_4": "Scenario 4 · Vendor Outage (Fallback)",
+        "scenario_4": "Scenario 4 · Vendor Fallback",
         "scenario_5": "Scenario 5 · Low Confidence (Triage)"
     }
     options_keys = list(scenario_labels.keys())

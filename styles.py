@@ -661,14 +661,21 @@ p, span, label, div {
     margin: 1.1rem 0 0.4rem 0;
 }
 
-/* Modern Observability Scenario Tabs */
+/* Modern Observability Scenario Tabs (Uniform Box Size) */
+[data-testid="stSidebar"] [data-testid="stRadio"] {
+    width: 100% !important;
+}
+
 [data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stRadioGroup"] {
     display: flex !important;
     flex-direction: column !important;
     gap: 0.35rem !important;
+    width: 100% !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stRadio"] [data-testid="stRadioGroup"] > div {
+    width: 100% !important;
+    display: block !important;
     margin-bottom: 0 !important;
 }
 
@@ -676,11 +683,14 @@ p, span, label, div {
     display: flex !important;
     align-items: center !important;
     width: 100% !important;
+    box-sizing: border-box !important;
+    min-height: 42px !important;
+    height: 42px !important;
     background: var(--bg-surface) !important;
     border: 1px solid var(--border-subtle) !important;
     border-left: 3px solid var(--border-subtle) !important;
     border-radius: 6px !important;
-    padding: 0.5rem 0.7rem !important;
+    padding: 0 0.75rem !important;
     margin: 0 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
@@ -706,13 +716,23 @@ p, span, label, div {
     display: none !important;
 }
 
+/* Inner content stretched full width and centered vertically */
+[data-testid="stSidebar"] [data-testid="stRadioOption"] > div {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
 /* Scenario Card Text Styling */
 [data-testid="stSidebar"] [data-testid="stRadioOption"] [data-testid="stMarkdownContainer"] p {
-    font-size: 0.79rem !important;
+    font-size: 0.78rem !important;
     font-weight: 500 !important;
-    line-height: 1.35 !important;
+    line-height: 1.2 !important;
     color: var(--text-primary) !important;
     margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stRadioOption"][data-selected="true"] [data-testid="stMarkdownContainer"] p,

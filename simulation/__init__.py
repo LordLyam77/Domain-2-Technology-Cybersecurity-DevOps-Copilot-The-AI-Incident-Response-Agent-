@@ -14,7 +14,11 @@ from .environment import (
     restart_service,
     escalate_and_enable_fallback,
     failover_replica,
-    reset_environment
+    reset_environment,
+    verify_remediation,
+    trigger_incident,
+    get_healthy_state,
+    get_action_history
 )
 
 __all__ = [
@@ -29,6 +33,9 @@ __all__ = [
     "restart_service",
     "escalate_and_enable_fallback",
     "failover_replica",
-    "reset_environment"
+    "reset_environment",
+    "verify_remediation",
+    "trigger_incident",
+    "get_healthy_state",
+    "get_action_history"
 ]
-

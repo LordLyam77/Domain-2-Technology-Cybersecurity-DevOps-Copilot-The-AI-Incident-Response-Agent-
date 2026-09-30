@@ -1,0 +1,203 @@
+{
+  "scenario_id": "scenario_2",
+  "investigation_steps": [
+    {
+      "step_number": 1,
+      "type": "INVESTIGATION_STARTED",
+      "timestamp": "14:15:35",
+      "alert": "CRITICAL: payment-service error rate spiked to 54.8% with 500s.",
+      "message": "DevOps Copilot agent initiated incident triage loop."
+    },
+    {
+      "step_number": 2,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:37",
+      "tool": "get_status",
+      "arguments": {
+        "service_name": "payment-service"
+      },
+      "message": "Invoking tool `get_status` with parameters: {'service_name': 'payment-service'}"
+    },
+    {
+      "step_number": 3,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:38",
+      "tool": "get_status",
+      "result_summary": "Status: CRITICAL | Error rate: 54.8% | Version: v2.4.0",
+      "result": {
+        "service": "payment-service",
+        "status": "CRITICAL",
+        "current_version": "v2.4.0",
+        "previous_version": "v2.3.9",
+        "error_rate": "54.8%",
+        "avg_latency_ms": 2800,
+        "db_status": "CONNECTIONS_EXHAUSTED",
+        "active_db_connections": 500,
+        "max_db_connections": 500
+      }
+    },
+    {
+      "step_number": 4,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:40",
+      "tool": "get_deploys",
+      "arguments": {
+        "service_name": "payment-service",
+        "limit": 4
+      },
+      "message": "Invoking tool `get_deploys` with parameters: {'service_name': 'payment-service', 'limit': 4}"
+    },
+    {
+      "step_number": 5,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:41",
+      "tool": "get_deploys",
+      "result_summary": "Found 4 recent deployments (latest: v2.4.0 - 'Refactor async payment receipt email dispatc...')",
+      "result": [
+        {
+          "deploy_id": "dep-494",
+          "version": "v2.4.0",
+          "service": "payment-service",
+          "timestamp": "2026-09-30T14:02:00Z",
+          "author": "emma@company.com",
+          "commit_msg": "Refactor async payment receipt email dispatcher",
+          "status": "DEPLOYED"
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:43",
+      "tool": "get_logs",
+      "arguments": {
+        "service_name": "payment-service",
+        "level": "ERROR",
+        "limit": 30
+      },
+      "message": "Invoking tool `get_logs` with parameters: {'service_name': 'payment-service', 'level': 'ERROR', 'limit': 30}"
+    },
+    {
+      "step_number": 7,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:44",
+      "tool": "get_logs",
+      "result_summary": "Found 35 log entries (psycopg2.OperationalError: FATAL: remaining conn...)",
+      "result": [
+        {
+          "timestamp": "2026-09-30T14:03:02Z",
+          "level": "ERROR",
+          "service": "payment-service",
+          "message": "psycopg2.OperationalError: FATAL: remaining connection slots are reserved for non-replication superuser connections"
+        }
+      ]
+    },
+    {
+      "step_number": 8,
+      "type": "INVESTIGATION_CONCLUDED",
+      "timestamp": "14:15:46",
+      "message": "Agent concluded initial investigation."
+    }
+  ],
+  "diagnosis": {
+    "root_cause": "Initial Hypothesis: Suspected deployment v2.4.0 caused connection issues, but underlying PostgreSQL primary database has exhausted all 500 connection slots ('remaining connection slots are reserved').",
+    "evidence": [
+      "Deployment v2.4.0 occurred at 14:02:00Z just prior to error surge.",
+      "Database status shows 500/500 active connections with state 'CONNECTIONS_EXHAUSTED'.",
+      "Logs show 'FATAL: remaining connection slots are reserved for non-replication superuser connections' and 'FATAL: too many connections for role payment_app'."
+    ],
+    "reasoning": "While deployment v2.4.0 coincided with the outage, the error traces indicate total connection pool exhaustion on the PostgreSQL primary database server rather than a typical application syntax bug.",
+    "confidence": {
+      "score": 75,
+      "explanation": "Outage onset coincided with deploy, but postgres error logs indicate total database connection saturation across the cluster."
+    },
+    "conflicting_or_missing_info": "Unclear whether the leak originates from payment-service or an external background worker job sharing the database.",
+    "recommended_action": "Rollback payment-service to version v2.3.9 to rule out deployment regression.",
+    "risk_level": "HIGH"
+  },
+  "plan": {
+    "action": "rollback",
+    "risk_level": "HIGH",
+    "requires_approval": true,
+    "target_service": "payment-service",
+    "description": "Rollback payment-service from current version to stable release v2.3.9.",
+    "parameters": {
+      "service_name": "payment-service",
+      "target_version": "v2.3.9"
+    },
+    "reasoning": "Deploy v2.4.0 coincided with the incident. Rollback will test whether the application code introduced the connection exhaustion.",
+    "fallback_action": "restart_service"
+  },
+  "secondary_investigation": {
+    "investigation_steps": [
+      {
+        "step_number": 1,
+        "type": "INVESTIGATION_STARTED",
+        "timestamp": "14:16:30",
+        "alert": "Rollback failed to resolve outage. payment-service error rate remains at 52.4%.",
+        "message": "Re-investigation initiated. Dropping application deploy hypothesis."
+      },
+      {
+        "step_number": 2,
+        "type": "TOOL_CALL",
+        "timestamp": "14:16:32",
+        "tool": "get_past_incidents",
+        "arguments": {
+          "query": "exhaustion"
+        },
+        "message": "Invoking tool `get_past_incidents` with parameters: {'query': 'exhaustion'}"
+      },
+      {
+        "step_number": 3,
+        "type": "TOOL_RESULT",
+        "timestamp": "14:16:33",
+        "tool": "get_past_incidents",
+        "result_summary": "Found 1 past incident(s) INC-650",
+        "result": [
+          {
+            "id": "INC-650",
+            "title": "Database Connection Pool Exhaustion on Postgres Primary",
+            "root_cause": "An unindexed analytics batch query opened hundreds of idle in transaction connections.",
+            "resolution": "Terminated idle connections using pg_terminate_backend and added connection timeout limit."
+          }
+        ]
+      },
+      {
+        "step_number": 4,
+        "type": "INVESTIGATION_CONCLUDED",
+        "timestamp": "14:16:35",
+        "message": "Secondary investigation complete: Root cause confirmed as PostgreSQL database connection saturation."
+      }
+    ],
+    "diagnosis": {
+      "root_cause": "PostgreSQL Primary Database connection pool exhaustion (500/500 connections saturated by idle client connections). The application deploy rollback to v2.3.9 was ineffective because the database itself has no available connection slots.",
+      "evidence": [
+        "Rollback to v2.3.9 completed successfully, but error rate remained elevated at 52.4%.",
+        "Database metrics confirm active_db_connections remains maxed at 500/500.",
+        "Postgres logs repeatedly emit 'FATAL: remaining connection slots are reserved for non-replication superuser connections'.",
+        "Past incident INC-650 confirms identical database-level failure caused by unclosed connections."
+      ],
+      "reasoning": "The application rollback disproved the hypothesis that v2.4.0 application code was the single point of failure. The PostgreSQL primary database server is refusing all new TCP connection handshakes because its connection table is saturated (500/500). Remediating this requires terminating idle database connections on the Postgres primary.",
+      "confidence": {
+        "score": 95,
+        "explanation": "Empirical testing proved that reverting the application release did not resolve errors, and direct database logs verify database connection saturation."
+      },
+      "conflicting_or_missing_info": "Requires database DBA access to run pg_terminate_backend on idle connections.",
+      "recommended_action": "Restart payment-service and terminate idle connections on PostgreSQL primary.",
+      "risk_level": "LOW"
+    },
+    "plan": {
+      "action": "restart_service",
+      "risk_level": "LOW",
+      "requires_approval": false,
+      "target_service": "payment-service",
+      "description": "Restart payment-service pods to drop hung client sockets while escalating to Database DBA.",
+      "parameters": {
+        "service_name": "payment-service"
+      },
+      "reasoning": "Application rollback failed. Restarting pods will release local stale sockets while database administrators terminate idle backend connections.",
+      "fallback_action": "escalate_to_dba"
+    }
+  },
+  "report_markdown": "# Incident Postmortem Report: INC-20260930-02\n\n## 1. Executive Summary\nOn September 30, 2026, **payment-service** experienced a critical outage with a 54.8% error rate. While the incident coincided with the release of deployment `v2.4.0`, an automated rollback to `v2.3.9` **failed to resolve the outage** (error rate remained 52.4%). A secondary investigation proved the true root cause was **PostgreSQL primary database connection pool exhaustion** (500/500 connection slots saturated).\n\n---\n\n## 2. Incident Timeline\n- **14:02:00 UTC** - Deployment `v2.4.0` released by `emma@company.com` ('Refactor async payment receipt email dispatcher').\n- **14:03:00 UTC** - PostgreSQL primary logged `FATAL: remaining connection slots are reserved for non-replication superuser connections`.\n- **14:15:30 UTC** - Outage alert fired with error rate reaching 54.8%.\n- **14:15:45 UTC** - Initial AI investigation suspected deploy v2.4.0 and recommended rollback.\n- **14:16:00 UTC** - Rollback to `v2.3.9` approved and executed.\n- **14:16:15 UTC** - **Verification Failed**: Service remained CRITICAL (error rate: 52.4%); database rejected connections.\n- **14:16:30 UTC** - AI Agent dropped deploy hypothesis and initiated secondary infrastructure investigation.\n- **14:16:45 UTC** - Confirmed database connection saturation (500/500 active handles); matched historical incident `INC-650`.\n\n---\n\n## 3. Failed Remediation Analysis & Learnings\n- **Attempted Action**: Automated deployment rollback to `v2.3.9`.\n- **Outcome**: `UNSUCCESSFUL` (Status remained `CRITICAL`, error rate `52.4%`).\n- **Key Learning**: Correlation does not equal causation. Even though the outage began shortly after deploy `v2.4.0`, the application code was not the root problem. The PostgreSQL primary database had independently reached its `max_connections` ceiling. Relying on verification after action execution was critical to detecting that the fix failed and avoiding false confidence.\n\n---\n\n## 4. True Root Cause Analysis\nThe PostgreSQL primary database instance reached its hard limit of 500 active connection slots. When the connection pool reached 500/500, PostgreSQL refused all incoming connection attempts from payment pods, causing 500 Internal Server Errors regardless of what application version was deployed.\n\n---\n\n## 5. Key Evidence & Telemetry\n- **Database Status**: `db_status: CONNECTIONS_EXHAUSTED`, `active_db_connections: 500 / 500`.\n- **Postgres Server Logs**: `FATAL: too many connections for role 'payment_app'` and `FATAL: remaining connection slots are reserved for non-replication superuser connections`.\n- **Past Incident Match**: Incident `INC-650` where an analytics batch job held idle connections, resolved via `pg_terminate_backend`.\n\n---\n\n## 6. Action Taken & Verification\n- **Initial Action**: Rollback to `v2.3.9` (Approved by SRE, verified as ineffective).\n- **Secondary Action**: Pod restart + Database connection cleanup escalation.\n- **Final Verification**: Database connection exhaustion documented for DBA remediation.\n\n---\n\n## 7. Follow-up Recommendations\n1. **Database Connection Pooling**: Deploy PgBouncer or AWS RDS Proxy between applications and PostgreSQL to prevent client connection exhaustion.\n2. **Idle Connection Timeouts**: Configure PostgreSQL `idle_in_transaction_session_timeout = '30s'` to automatically terminate orphaned sessions.\n3. **Independent Database Alerting**: Add dedicated PagerDuty alarms for PostgreSQL connection saturation (>85% of max_connections)."
+}

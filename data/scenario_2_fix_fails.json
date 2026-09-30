@@ -1,0 +1,459 @@
+{
+  "scenario_id": "scenario_2_fix_fails",
+  "title": "Scenario 2: Fix Fails (Underlying DB Exhaustion)",
+  "description": "Payment service degraded, coincides with deploy v2.4.0, but root cause is PostgreSQL running out of connection slots. Rollback will NOT recover service.",
+  "service_name": "payment-service",
+  "initial_state": {
+    "status": "CRITICAL",
+    "current_version": "v2.4.0",
+    "previous_version": "v2.3.9",
+    "healthy_version": "NONE",
+    "error_rate": "54.8%",
+    "avg_latency_ms": 2800,
+    "active_db_connections": 500,
+    "max_db_connections": 500,
+    "db_status": "CONNECTIONS_EXHAUSTED",
+    "uptime_seconds": 840,
+    "last_updated": "2026-09-30T14:16:00Z"
+  },
+  "deploys": [
+    {
+      "deploy_id": "dep-491",
+      "version": "v2.3.7",
+      "service": "payment-service",
+      "timestamp": "2026-09-28T09:15:00Z",
+      "author": "alice@company.com",
+      "commit_hash": "a7e10c2",
+      "commit_msg": "Fix currency rounding issue in checkout calculation",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-492",
+      "version": "v2.3.8",
+      "service": "payment-service",
+      "timestamp": "2026-09-29T11:30:00Z",
+      "author": "bob@company.com",
+      "commit_hash": "f4c99b1",
+      "commit_msg": "Add metric logging for checkout conversion funnel",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-493",
+      "version": "v2.3.9",
+      "service": "payment-service",
+      "timestamp": "2026-09-30T10:00:00Z",
+      "author": "carol@company.com",
+      "commit_hash": "3d9a184",
+      "commit_msg": "Bump dependencies and update stripe-sdk version",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-494",
+      "version": "v2.4.0",
+      "service": "payment-service",
+      "timestamp": "2026-09-30T14:02:00Z",
+      "author": "emma@company.com",
+      "commit_hash": "11fa23e",
+      "commit_msg": "Refactor async payment receipt email dispatcher",
+      "status": "DEPLOYED"
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": "2026-09-30T13:48:00Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 15ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:49:12Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1001 amount=22.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:50:30Z",
+      "level": "INFO",
+      "service": "postgres-primary",
+      "message": "PostgreSQL database autovacuum finished on table payments"
+    },
+    {
+      "timestamp": "2026-09-30T13:51:15Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1002 amount=85.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:52:40Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - active_pool=12 idle_pool=38"
+    },
+    {
+      "timestamp": "2026-09-30T13:53:20Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1003 amount=110.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:54:10Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 14ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:55:00Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1004 amount=45.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:56:15Z",
+      "level": "WARN",
+      "service": "postgres-primary",
+      "message": "Postgres active connection count reached 420/500"
+    },
+    {
+      "timestamp": "2026-09-30T13:57:30Z",
+      "level": "WARN",
+      "service": "postgres-primary",
+      "message": "Unterminated client connections detected from analytics-batch-job"
+    },
+    {
+      "timestamp": "2026-09-30T13:58:10Z",
+      "level": "WARN",
+      "service": "postgres-primary",
+      "message": "Postgres active connection count reached 480/500"
+    },
+    {
+      "timestamp": "2026-09-30T13:59:00Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1005 amount=18.50 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T14:00:20Z",
+      "level": "WARN",
+      "service": "postgres-primary",
+      "message": "Connection count reached 498/500. Remaining 2 slots reserved for superuser."
+    },
+    {
+      "timestamp": "2026-09-30T14:01:05Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "Incoming SIGTERM for routine maintenance deploy v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:00Z",
+      "level": "INFO",
+      "service": "deployer",
+      "message": "Starting rolling deployment of payment-service:v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:18Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "Container started. Listening on :8080. Version v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:30Z",
+      "level": "INFO",
+      "service": "deployer",
+      "message": "Deployment completed for payment-service:v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:00Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:02Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "psycopg2.OperationalError: FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:03Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:25Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:40Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:55Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:22Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:35Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "Connection acquisition timed out after 5000ms. Database server rejected connection request."
+    },
+    {
+      "timestamp": "2026-09-30T14:04:50Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:05Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:20Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:40Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:50Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:55Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:15Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:35Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:50Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:10Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:55Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:10:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:10:40Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:25Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:50Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:15Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:40Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:25Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:50Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:35Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:45Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:50Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:00Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PaymentServiceHigh5xxErrorRate (rate > 50%)"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:15Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PostgresDatabaseConnectionsExhausted (active: 500/500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:45Z",
+      "level": "FATAL",
+      "service": "postgres-primary",
+      "message": "FATAL: too many connections for role 'payment_app' (current: 500, max: 500)"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "psycopg2.OperationalError: server closed the connection unexpectedly"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:45Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    }
+  ]
+}

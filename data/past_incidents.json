@@ -1,0 +1,42 @@
+[
+  {
+    "id": "INC-892",
+    "title": "Payment Service 500 Spike after v2.1.2 deploy",
+    "service": "payment-service",
+    "timestamp": "2026-08-14T16:20:00Z",
+    "symptoms": "Spike in HTTP 500 errors and DB connection timeout alerts immediately following deployment.",
+    "root_cause": "Database connection pool size was inadvertently lowered from 50 to 5 in application configuration.",
+    "resolution": "Rolled back deployment to v2.1.1, restoring previous pool size. Service recovered in 3 minutes.",
+    "tags": ["rollback", "db-pool", "payment-service", "500-error"]
+  },
+  {
+    "id": "INC-741",
+    "title": "Checkout Gateway 504 Gateway Timeout during flash sale",
+    "service": "payment-service",
+    "timestamp": "2026-07-02T19:05:00Z",
+    "symptoms": "Downstream payment gateway Stripe responded with elevated latency > 8000ms causing timeouts.",
+    "root_cause": "External payment provider experienced partial regional degradation.",
+    "resolution": "Enabled circuit breaker and temporarily routed backup traffic to Adyen gateway.",
+    "tags": ["gateway-timeout", "third-party", "circuit-breaker"]
+  },
+  {
+    "id": "INC-650",
+    "title": "Database Connection Pool Exhaustion on Postgres Primary",
+    "service": "postgres-primary",
+    "timestamp": "2026-06-11T10:45:00Z",
+    "symptoms": "All services unable to acquire database connection: 'FATAL: remaining connection slots are reserved'.",
+    "root_cause": "An unindexed analytics batch query opened hundreds of idle in transaction connections.",
+    "resolution": "Terminated idle connections using pg_terminate_backend and added connection timeout limit.",
+    "tags": ["database", "postgres", "connection-leak", "pool-exhaustion"]
+  },
+  {
+    "id": "INC-512",
+    "title": "Payment Service Memory Leak on v1.9.8",
+    "service": "payment-service",
+    "timestamp": "2026-04-20T08:30:00Z",
+    "symptoms": "Pods restarted with OOMKilled error code 137 repeatedly every 30 minutes.",
+    "root_cause": "Unbounded cache in memory storing deserialized JWT tokens without TTL.",
+    "resolution": "Applied hotfix v1.9.9 with LRU cache eviction and restarted payment pods.",
+    "tags": ["oom", "memory-leak", "restart"]
+  }
+]

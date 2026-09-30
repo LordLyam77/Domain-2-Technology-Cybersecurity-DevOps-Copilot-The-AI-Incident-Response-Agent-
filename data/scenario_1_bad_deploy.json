@@ -1,0 +1,465 @@
+{
+  "scenario_id": "scenario_1_bad_deploy",
+  "title": "Scenario 1: Bad Deploy (Configuration Regression)",
+  "description": "Payment service degraded after v2.4.0 deploy due to DB connection pool misconfiguration. Rollback fixes it.",
+  "service_name": "payment-service",
+  "initial_state": {
+    "status": "CRITICAL",
+    "current_version": "v2.4.0",
+    "previous_version": "v2.3.9",
+    "healthy_version": "v2.3.9",
+    "error_rate": "43.5%",
+    "avg_latency_ms": 1150,
+    "active_db_connections": 10,
+    "max_db_connections": 10,
+    "db_status": "ONLINE",
+    "uptime_seconds": 840,
+    "last_updated": "2026-09-30T14:16:00Z"
+  },
+  "deploys": [
+    {
+      "deploy_id": "dep-491",
+      "version": "v2.3.7",
+      "service": "payment-service",
+      "timestamp": "2026-09-28T09:15:00Z",
+      "author": "alice@company.com",
+      "commit_hash": "a7e10c2",
+      "commit_msg": "Fix currency rounding issue in checkout calculation",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-492",
+      "version": "v2.3.8",
+      "service": "payment-service",
+      "timestamp": "2026-09-29T11:30:00Z",
+      "author": "bob@company.com",
+      "commit_hash": "f4c99b1",
+      "commit_msg": "Add metric logging for checkout conversion funnel",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-493",
+      "version": "v2.3.9",
+      "service": "payment-service",
+      "timestamp": "2026-09-30T10:00:00Z",
+      "author": "carol@company.com",
+      "commit_hash": "3d9a184",
+      "commit_msg": "Bump dependencies and update stripe-sdk version",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-494",
+      "version": "v2.4.0",
+      "service": "payment-service",
+      "timestamp": "2026-09-30T14:02:00Z",
+      "author": "dave@company.com",
+      "commit_hash": "9b8e21a",
+      "commit_msg": "Updated DB connection pool config to tune memory usage (reduced pool size to 10)",
+      "status": "DEPLOYED"
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": "2026-09-30T13:48:12Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 12ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:48:45Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_9912 amount=45.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:49:10Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - pool_active=4 pool_idle=46"
+    },
+    {
+      "timestamp": "2026-09-30T13:50:02Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_8831 amount=120.50 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:51:22Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund - refund_id=ref_1012 status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:52:05Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 14ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:53:18Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_4411 amount=19.99 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:54:33Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - pool_active=6 pool_idle=44"
+    },
+    {
+      "timestamp": "2026-09-30T13:55:01Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_7721 amount=89.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:56:40Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 11ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:57:15Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_3342 amount=250.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:58:20Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_6619 amount=15.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T13:59:05Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - pool_active=5 pool_idle=45"
+    },
+    {
+      "timestamp": "2026-09-30T14:00:12Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 13ms"
+    },
+    {
+      "timestamp": "2026-09-30T14:01:05Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1120 amount=65.20 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T14:01:45Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "Incoming SIGTERM for rolling upgrade to v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:00Z",
+      "level": "INFO",
+      "service": "deployer",
+      "message": "Starting rolling deployment of payment-service:v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:15Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "Applying configuration: max_connection_pool=10, connection_timeout_ms=1000"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:22Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "Container started. Listening on :8080. Version v2.4.0"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:30Z",
+      "level": "INFO",
+      "service": "deployer",
+      "message": "Deployment completed for payment-service:v2.4.0. Traffic cutover 100%."
+    },
+    {
+      "timestamp": "2026-09-30T14:03:02Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_9011 amount=34.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:15Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Connection pool capacity reaching threshold (9/10 allocated)"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:28Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Connection acquisition took 850ms (threshold: 500ms)"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:45Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: Timeout waiting for idle connection in pool (max=10, active=10, waiters=4)"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:46Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:02Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:10Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - db ping failed: connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:18Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded, request queued > 1000ms"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:01Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:15Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_5512 amount=10.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:22Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: Timeout waiting for idle connection in pool (active=10/10)"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:35Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - pool_active=10 pool_idle=0 pool_waiters=12"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:12Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:33Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:05Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:22Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:44Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - db ping failed: connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:35Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:02Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_2234 amount=5.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:20Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:48Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:10:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:10:40Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:05Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "GET /metrics 200 OK - pool_active=10 pool_idle=0 pool_waiters=18"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:32Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:01Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:28Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:55Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:19Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - db ping failed: connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:42Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:05Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:55Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:18Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "Connection acquisition attempt timed out after 1000ms"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:25Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:30Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PaymentServiceHigh5xxErrorRate (rate > 40%)"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:45Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PaymentServiceDatabaseConnectionTimeouts (count > 50 in 10m)"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:50Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - db ping failed: connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:02Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "ConnectionPoolExhaustedException: pool size 10 exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    },
+    {
+      "timestamp": "2026-09-30T14:16:45Z",
+      "level": "WARN",
+      "service": "ingress-controller",
+      "message": "Upstream server returned 500 for host payment.internal"
+    },
+    {
+      "timestamp": "2026-09-30T14:17:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - database connection timeout"
+    }
+  ]
+}

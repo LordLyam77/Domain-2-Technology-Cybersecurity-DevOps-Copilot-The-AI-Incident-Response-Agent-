@@ -1,0 +1,101 @@
+{
+  "scenario_id": "scenario_5_conflicting_evidence",
+  "title": "Scenario 5: Conflicting evidence (low confidence)",
+  "description": "Alert fires 10 minutes after deployment v2.4.2. While the timing superficially implicates the release, deep logs reveal errors are strictly isolated to stale reads on a lagging database replica (db-replica-02), while the release commit is unrelated client analytics.",
+  "service_name": "payment-service",
+  "alert": {
+    "alert_id": "ALERT-20260930-905",
+    "service": "payment-service",
+    "severity": "CRITICAL",
+    "metric": "http_5xx_rate",
+    "current_value": "32.4%",
+    "threshold": "> 5.0%",
+    "summary": "CRITICAL: payment-service error rate spiked to 32.4% with 500 Internal Server Error responses during account verification.",
+    "started_at": "2026-09-30T14:15:00Z"
+  },
+  "initial_state": {
+    "status": "CRITICAL",
+    "current_version": "v2.4.2",
+    "previous_version": "v2.4.1",
+    "error_rate": "32.4%",
+    "avg_latency_ms": 1850,
+    "uptime_seconds": 600,
+    "cpu_usage": "22.5%",
+    "memory_usage_mb": 450,
+    "max_memory_mb": 2048,
+    "memory_pct": "21.9%",
+    "active_db_connections": 18,
+    "max_db_connections": 50,
+    "db_health": "DEGRADED (Primary: OK, db-replica-01: OK, db-replica-02: LAGGING 480s)",
+    "primary_db": "postgres-primary (healthy, 0 lag)",
+    "replica_nodes": {
+      "db-replica-01": {"status": "HEALTHY", "lag_seconds": 0.4, "qps": 120},
+      "db-replica-02": {"status": "DEGRADED", "lag_seconds": 480.0, "qps": 115, "state": "WAL_REPLAY_STALLED"}
+    },
+    "failing_node": "db-replica-02",
+    "total_requests_last_10m": 2100,
+    "failed_requests_last_10m": 680
+  },
+  "deploys": [
+    {
+      "deploy_id": "dep-520",
+      "version": "v2.4.2",
+      "service": "payment-service",
+      "timestamp": "2026-09-30T14:05:00Z",
+      "author": "kevin@company.com",
+      "commit_hash": "4d1b80f",
+      "commit_msg": "Add Google Analytics 4 tags to payment receipt page (client telemetry update)",
+      "status": "DEPLOYED"
+    },
+    {
+      "deploy_id": "dep-510",
+      "version": "v2.4.1",
+      "service": "payment-service",
+      "timestamp": "2026-09-28T14:06:00Z",
+      "author": "sarah@company.com",
+      "commit_hash": "e1a4f09",
+      "commit_msg": "Update button copy on checkout modal to Complete Order",
+      "status": "DEPLOYED"
+    },
+    {
+      "deploy_id": "dep-502",
+      "version": "v2.4.0",
+      "service": "payment-service",
+      "timestamp": "2026-09-20T10:15:00Z",
+      "author": "dave@company.com",
+      "commit_hash": "3f8c12a",
+      "commit_msg": "Upgrade logging framework to v3.1",
+      "status": "DEPLOYED"
+    }
+  ],
+  "logs": [
+    {"timestamp": "2026-09-30T14:00:10Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9011 - status=200 duration=14ms node=db-replica-01"},
+    {"timestamp": "2026-09-30T14:00:35Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9012 - status=200 duration=15ms node=db-replica-02"},
+    {"timestamp": "2026-09-30T14:01:20Z", "level": "INFO", "service": "postgres-primary", "message": "Replication stream sync: sending WAL segment 000000010000004F00000020 to all replicas"},
+    {"timestamp": "2026-09-30T14:02:05Z", "level": "WARN", "service": "cdn-cache", "message": "Static asset edge cache miss ratio 14.2% slightly elevated (nominal variance)"},
+    {"timestamp": "2026-09-30T14:02:50Z", "level": "INFO", "service": "payment-service", "message": "POST /v1/checkout/process - status=200 duration=38ms provider=primary_gateway tx_id=tx_8810"},
+    {"timestamp": "2026-09-30T14:03:30Z", "level": "INFO", "service": "payment-service", "message": "GET /health/liveness - status=200 cpu=18% memory=420MB"},
+    {"timestamp": "2026-09-30T14:04:15Z", "level": "INFO", "service": "deployer", "message": "Deployment dep-520 initiated for payment-service version v2.4.2 by kevin@company.com"},
+    {"timestamp": "2026-09-30T14:05:00Z", "level": "INFO", "service": "deployer", "message": "Deployment dep-520 finished successfully. Commit 4d1b80f: 'Add Google Analytics 4 tags to payment receipt page'"},
+    {"timestamp": "2026-09-30T14:05:30Z", "level": "INFO", "service": "payment-service", "message": "Pods rolling update complete. Running v2.4.2 across all 4 container instances."},
+    {"timestamp": "2026-09-30T14:06:10Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9015 - status=200 duration=16ms node=db-replica-01 (v2.4.2)"},
+    {"timestamp": "2026-09-30T14:07:00Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9016 - status=200 duration=15ms node=db-replica-02 (v2.4.2)"},
+    {"timestamp": "2026-09-30T14:07:45Z", "level": "WARN", "service": "auth-filter", "message": "Expired OAuth2 refresh token from client_ip=198.51.100.12 (HTTP 401 rejected)"},
+    {"timestamp": "2026-09-30T14:08:30Z", "level": "INFO", "service": "payment-service", "message": "POST /v1/checkout/process - status=200 duration=41ms tx_id=tx_8814"},
+    {"timestamp": "2026-09-30T14:09:15Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9018 - status=200 duration=14ms node=db-replica-01"},
+    {"timestamp": "2026-09-30T14:10:00Z", "level": "WARN", "service": "db-replica-02", "message": "PostgreSQL replication lag warning: db-replica-02 is 120s behind primary (WAL replay contention)"},
+    {"timestamp": "2026-09-30T14:11:10Z", "level": "WARN", "service": "storage-engine", "message": "Heavy EBS volume read I/O burst on db-replica-02: queue depth 64, iops 4200"},
+    {"timestamp": "2026-09-30T14:12:00Z", "level": "WARN", "service": "db-replica-02", "message": "Replication delay worsening: db-replica-02 is now 310s behind primary. 142 WAL files pending replay."},
+    {"timestamp": "2026-09-30T14:12:45Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9020 - status=200 duration=12ms node=db-replica-01 (read OK)"},
+    {"timestamp": "2026-09-30T14:13:15Z", "level": "ERROR", "service": "payment-service", "message": "RecordNotFoundException: Account 'acc_9021' not found on read-replica db-replica-02 (stale read: record created 210s ago on primary)"},
+    {"timestamp": "2026-09-30T14:13:16Z", "level": "ERROR", "service": "payment-service", "message": "HTTP 500 InternalServerError returned to client on /v1/accounts/verify - inconsistent account state detected from db-replica-02"},
+    {"timestamp": "2026-09-30T14:13:40Z", "level": "INFO", "service": "payment-service", "message": "GET /v1/accounts/verify?id=acc_9022 - status=200 duration=14ms node=db-replica-01 (read OK)"},
+    {"timestamp": "2026-09-30T14:14:05Z", "level": "ERROR", "service": "payment-service", "message": "RecordNotFoundException: Account 'acc_9023' not found on read-replica db-replica-02 (stale read: replica lag 420s)"},
+    {"timestamp": "2026-09-30T14:14:10Z", "level": "ERROR", "service": "db-replica-02", "message": "ERROR: cancelling statement due to conflict with recovery on db-replica-02 (User query clashed with WAL replay)"},
+    {"timestamp": "2026-09-30T14:14:30Z", "level": "ERROR", "service": "payment-service", "message": "HTTP 500 InternalServerError: database read conflict with recovery on db-replica-02"},
+    {"timestamp": "2026-09-30T14:14:50Z", "level": "WARN", "service": "patroni-monitor", "message": "Replica db-replica-02 health: REPLICATION_LAG_CRITICAL (480s lag). Node db-replica-01 lag is 0.4s (NORMAL)."},
+    {"timestamp": "2026-09-30T14:14:55Z", "level": "INFO", "service": "postgres-primary", "message": "Primary node healthy: 0 replication delay on replica-01. Write throughput 230 tps. Saturated I/O is isolated to replica-02."},
+    {"timestamp": "2026-09-30T14:15:00Z", "level": "ERROR", "service": "alertmanager", "message": "Firing alert PaymentServiceHigh5xxErrorRate: error_rate=32.4% threshold=5.0% service=payment-service"},
+    {"timestamp": "2026-09-30T14:15:05Z", "level": "ERROR", "service": "payment-service", "message": "Read routing summary: db-replica-01 errors=0 (0%), db-replica-02 errors=680 (100% of queries directed to this replica fail)"}
+  ]
+}

@@ -118,6 +118,72 @@ Scenario 2 demonstrates what happens when the obvious initial hypothesis fails t
 
 ---
 
+### Walkthrough of Scenario 3: "Memory Leak" (Gradual Degradation & Auto-Restart)
+
+Scenario 3 proves that the agent can diagnose subtle infrastructure degradation that has **no recent deploy**:
+
+1. **The Alert Fires**: `payment-service` has an error rate of **38.6%** and average latency spikes to **3450ms**.
+2. **Tool 1 & 2 (Status & Deploys)**:
+   - Status shows `memory_usage_mb: 1968 / 2048` (**96.1% heap capacity**), with uptime of 5 days (`432,000s`).
+   - The deploy log shows **NO recent deployment** (last deploy was 5 days ago and ran fine).
+3. **The Trap**: A naive script that assumes every outage is caused by a bad release would be completely lost or trigger a useless rollback.
+4. **Tool 3 & 4 (Logs & Past Incidents)**:
+   - Error logs reveal `java.lang.OutOfMemoryError: Java heap space` during batch ledger reconciliation (`ledger-reconcile-worker`).
+   - The agent cross-references past incident `INC-402`, where a gradual memory leak in the batch worker caused heap exhaustion after 4+ days of continuous uptime.
+5. **Low-Risk Action & Auto-Execution**:
+   - The planner assigns **`LOW RISK`** to `restart_service`.
+   - The action executes safely, flushing leaked memory.
+6. **Verification & Postmortem**:
+   - Status recovers to `HEALTHY`, memory drops to **240MB (11.7%)**, and error rate drops to **0.1%**.
+   - Postmortem recommends adding automated JVM heap monitoring and scheduled worker recycling.
+
+---
+
+### Walkthrough of Scenario 4: "Third-Party Vendor Outage" (Upstream Failure & Failover)
+
+Scenario 4 demonstrates that the agent **does not execute useless rollbacks** when the problem is an external partner:
+
+1. **The Alert Fires**: `payment-service` experiences a **41.8%** error rate with high latency (3450ms).
+2. **The Red Herring**: Deploy `v2.4.1` (*"Update checkout copy and footer disclaimers"*) occurred 12 minutes ago.
+3. **The Trap**: An impulsive engineer would immediately roll back `v2.4.1`. However, that commit only changed HTML/text copy!
+4. **Tool Investigation**:
+   - Internal metrics show database health is completely normal (`db_health: HEALTHY`, pool 8/50).
+   - But error logs are dominated by `504 Gateway Timeout` when calling `https://api.paygate-global.com/v2/charges`.
+   - The agent detects: **PayGate Global (the external payment gateway) is down**.
+5. **The Agent's Intelligence**:
+   - The agent explicitly avoids a rollback. It warns that rolling back application code will not fix an external vendor outage.
+   - It proposes: `escalate_and_enable_fallback` (switch payment routing to secondary provider `StripeSecondary` and page the vendor NOC).
+6. **Human Approval Gate**:
+   - Marked **`MEDIUM RISK`** (enabling a secondary provider incurs different transaction fees).
+   - Human clicks **"✅ Approve Fix"**.
+7. **Verification**:
+   - `fallback_provider_enabled = true`.
+   - Transactions reroute to the secondary provider, and the error rate drops from **41.8% ➔ 0.8%**.
+
+---
+
+### Walkthrough of Scenario 5: "Conflicting Evidence" (Low Confidence & 3 Operator Choices)
+
+Scenario 5 highlights the system's honesty: **when data is ambiguous, the agent does NOT guess—it lowers its confidence and gives the operator choices**:
+
+1. **The Alert Fires**: Error rate is **32.4%** on `payment-service`.
+2. **Conflicting Telemetry**:
+   - Deploy `v2.4.2` occurred 8 minutes ago (*"Add client telemetry analytics tag"*).
+   - At the same time, database read replica `db-replica-02` shows replication lag spiking to **480 seconds** with `WAL_REPLAY_STALLED`.
+3. **The Low Confidence Threshold**:
+   - The agent correlates the symptoms and finds conflicting signals.
+   - It calculates a **confidence score of 52%** (well below the 60% threshold).
+4. **Honest Operator Choice Menu**:
+   Instead of forcing a single automated action, the UI presents **3 operator choices**:
+   - **Choice A (Recommended)**: *"Fail Over Replica"* — Drain stale `db-replica-02` and route reads to healthy `db-replica-01`.
+   - **Choice B**: *"Rollback Anyway"* — Roll back deploy `v2.4.2` if the operator suspects the release.
+   - **Choice C**: *"Gather More Info"* — Collect extended replica logs.
+5. **Branching Outcomes**:
+   - If operator clicks **Fail Over Replica**: Service immediately recovers to `HEALTHY` (error rate **0.2%**).
+   - If operator clicks **Rollback Anyway**: The rollback succeeds, but verification catches that the error rate remains **32.4% CRITICAL**. The UI then offers **"🔍 Re-investigate"**, which correctly identifies the replica lag and performs the failover!
+
+---
+
 ## 4. Human Rejection & Alternative Fallback Flow
 
 What happens if an engineer looks at the proposed action and says "No"?

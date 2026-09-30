@@ -34,7 +34,17 @@ def is_demo_mode_env() -> bool:
 
 def load_demo_cache(scenario: str) -> Dict[str, Any]:
     """Loads pre-recorded scenario data from data/demo_cache/."""
-    sc_clean = "scenario_2" if "2" in scenario else "scenario_1"
+    if "5" in scenario:
+        sc_clean = "scenario_5"
+    elif "4" in scenario:
+        sc_clean = "scenario_4"
+    elif "3" in scenario:
+        sc_clean = "scenario_3"
+    elif "2" in scenario:
+        sc_clean = "scenario_2"
+    else:
+        sc_clean = "scenario_1"
+        
     cache_file = os.path.join(DEMO_CACHE_DIR, f"{sc_clean}_cache.json")
     
     if not os.path.exists(cache_file):

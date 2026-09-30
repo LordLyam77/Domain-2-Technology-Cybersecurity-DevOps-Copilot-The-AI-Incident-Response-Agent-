@@ -2,6 +2,33 @@
 Simulation package for DevOps Copilot.
 Contains the simulated infrastructure environment (services, deploys, logs, incidents).
 """
-from .environment import SimulatedEnvironment, get_environment
+from .environment import (
+    SimulatedEnvironment,
+    get_environment,
+    get_status,
+    get_logs,
+    get_deploys,
+    get_past_incidents,
+    get_metrics_timeline,
+    rollback,
+    restart_service,
+    escalate_and_enable_fallback,
+    failover_replica,
+    reset_environment
+)
 
-__all__ = ["SimulatedEnvironment", "get_environment"]
+__all__ = [
+    "SimulatedEnvironment",
+    "get_environment",
+    "get_status",
+    "get_logs",
+    "get_deploys",
+    "get_past_incidents",
+    "get_metrics_timeline",
+    "rollback",
+    "restart_service",
+    "escalate_and_enable_fallback",
+    "failover_replica",
+    "reset_environment"
+]
+

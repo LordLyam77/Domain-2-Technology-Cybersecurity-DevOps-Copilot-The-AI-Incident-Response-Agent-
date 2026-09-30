@@ -38,5 +38,25 @@
     "root_cause": "Unbounded cache in memory storing deserialized JWT tokens without TTL.",
     "resolution": "Applied hotfix v1.9.9 with LRU cache eviction and restarted payment pods.",
     "tags": ["oom", "memory-leak", "restart"]
+  },
+  {
+    "id": "INC-915",
+    "title": "PayGate Upstream Outage - Unrelated UI deploy mistargeted",
+    "service": "payment-service",
+    "timestamp": "2026-08-30T11:15:00Z",
+    "symptoms": "HTTP 504 Gateway Timeout on checkout. Engineers initially suspected a recent button copy deploy, but rolling back did not resolve 504 errors.",
+    "root_cause": "Primary third-party gateway (PayGate) experienced an upstream cloud outage. Internal database, memory, and CPU were completely healthy.",
+    "resolution": "Escalated incident to vendor status desk and enabled secondary fallback payment provider (StripeSecondary). Error rate dropped from 45% to <1%. Caution: Never roll back an unrelated UI/copy change when internal metrics are healthy and errors are upstream timeouts.",
+    "tags": ["gateway-timeout", "third-party", "vendor-outage", "fallback", "escalate"]
+  },
+  {
+    "id": "INC-780",
+    "title": "Postgres Read Replica Lag Causing Stale Account Verification 500s",
+    "service": "payment-service",
+    "timestamp": "2026-09-12T14:40:00Z",
+    "symptoms": "HTTP 500 InternalServerError on account verification calls. Outage began 10m after deploy v2.3.5.",
+    "root_cause": "Database replica db-replica-02 suffered 500s replication lag due to disk I/O contention, causing queries to read nonexistent newly-created records. The recent deploy was an unrelated analytics tracking tag.",
+    "resolution": "Engineers initially considered rolling back, but low confidence and conflicting logs revealed the true cause. SRE failed over the lagging replica (failover_replica) and drained traffic to healthy replica db-replica-01. Service recovered immediately.",
+    "tags": ["replication-lag", "postgres", "replica", "failover", "stale-read"]
   }
 ]

@@ -1,0 +1,326 @@
+{
+  "scenario_id": "scenario_3_memory_leak",
+  "title": "Scenario 3: Memory Leak (Restart Fixes It)",
+  "description": "Payment service experiencing memory pressure, rising latency, and OutOfMemoryError crashes. No recent deploy. Restart clears leak.",
+  "service_name": "payment-service",
+  "initial_state": {
+    "status": "CRITICAL",
+    "current_version": "v2.3.9",
+    "previous_version": "v2.3.8",
+    "healthy_version": "v2.3.9",
+    "error_rate": "38.6%",
+    "avg_latency_ms": 3450,
+    "memory_usage_mb": 1968,
+    "max_memory_mb": 2048,
+    "memory_pct": "96.1%",
+    "active_db_connections": 14,
+    "max_db_connections": 50,
+    "db_status": "ONLINE",
+    "uptime_seconds": 432000,
+    "last_updated": "2026-09-30T14:16:00Z"
+  },
+  "deploys": [
+    {
+      "deploy_id": "dep-488",
+      "version": "v2.3.7",
+      "service": "payment-service",
+      "timestamp": "2026-09-20T10:15:00Z",
+      "author": "alice@company.com",
+      "commit_hash": "a7e10c2",
+      "commit_msg": "Fix currency rounding issue in checkout calculation",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-489",
+      "version": "v2.3.8",
+      "service": "payment-service",
+      "timestamp": "2026-09-22T14:30:00Z",
+      "author": "bob@company.com",
+      "commit_hash": "f4c99b1",
+      "commit_msg": "Add metric logging for checkout conversion funnel",
+      "status": "SUCCESS"
+    },
+    {
+      "deploy_id": "dep-490",
+      "version": "v2.3.9",
+      "service": "payment-service",
+      "timestamp": "2026-09-25T08:00:00Z",
+      "author": "carol@company.com",
+      "commit_hash": "3d9a184",
+      "commit_msg": "Bump dependencies and update stripe-sdk version",
+      "status": "SUCCESS"
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": "2026-09-30T10:00:15Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 15ms heap_used: 1120MB"
+    },
+    {
+      "timestamp": "2026-09-30T10:05:22Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_1201 amount=49.99 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T10:15:00Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Slow query warning: SELECT * FROM audit_logs took 420ms"
+    },
+    {
+      "timestamp": "2026-09-30T10:30:45Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics - jvm_heap_used_bytes=1258291200 gc_pause_ms=45"
+    },
+    {
+      "timestamp": "2026-09-30T11:00:12Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 22ms heap_used: 1340MB"
+    },
+    {
+      "timestamp": "2026-09-30T11:15:30Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_5541 amount=12.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T11:30:05Z",
+      "level": "WARN",
+      "service": "auth-service",
+      "message": "User session token refreshed for usr_88192"
+    },
+    {
+      "timestamp": "2026-09-30T11:45:18Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics - jvm_heap_used_bytes=1468006400 gc_pause_ms=85"
+    },
+    {
+      "timestamp": "2026-09-30T12:00:20Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /health 200 OK - latency: 45ms heap_used: 1540MB"
+    },
+    {
+      "timestamp": "2026-09-30T12:15:40Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_9932 amount=120.00 USD status=200 OK"
+    },
+    {
+      "timestamp": "2026-09-30T12:30:10Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "GC overhead limit approaching: Full GC took 450ms, reclaimed only 32MB"
+    },
+    {
+      "timestamp": "2026-09-30T12:45:00Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "GET /metrics - jvm_heap_used_bytes=1677721600 gc_pause_ms=310"
+    },
+    {
+      "timestamp": "2026-09-30T13:00:15Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "High memory warning: JVM heap at 82% (1680MB / 2048MB)"
+    },
+    {
+      "timestamp": "2026-09-30T13:10:02Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_4411 amount=85.50 USD status=200 OK latency=310ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:20:45Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Thread pool worker latency elevated: 650ms waiting for GC pause"
+    },
+    {
+      "timestamp": "2026-09-30T13:30:12Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "High memory warning: JVM heap at 88% (1802MB / 2048MB)"
+    },
+    {
+      "timestamp": "2026-09-30T13:40:00Z",
+      "level": "WARN",
+      "service": "ingress-controller",
+      "message": "Upstream response time degraded: payment.internal p99=1850ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:45:22Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Consecutive Full GC cycles triggered: GC duration 920ms"
+    },
+    {
+      "timestamp": "2026-09-30T13:50:15Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "High memory warning: JVM heap at 93% (1904MB / 2048MB)"
+    },
+    {
+      "timestamp": "2026-09-30T13:55:01Z",
+      "level": "INFO",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge - customer_id=cus_7721 amount=210.00 USD status=200 OK latency=1120ms"
+    },
+    {
+      "timestamp": "2026-09-30T14:00:10Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "java.lang.OutOfMemoryError: Java heap space at com.company.payment.cache.TransactionTokenCache.put"
+    },
+    {
+      "timestamp": "2026-09-30T14:00:12Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - Handler dispatch failed: java.lang.OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:01:05Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "Health check liveness probe response timeout after 3000ms"
+    },
+    {
+      "timestamp": "2026-09-30T14:01:45Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "java.lang.OutOfMemoryError: GC overhead limit exceeded"
+    },
+    {
+      "timestamp": "2026-09-30T14:02:40Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - java.lang.OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:10Z",
+      "level": "WARN",
+      "service": "kubelet",
+      "message": "Container payment-service memory cgroup usage 96% approaching limit 2048Mi"
+    },
+    {
+      "timestamp": "2026-09-30T14:03:45Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:12Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:04:35Z",
+      "level": "WARN",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - thread blocked during GC pause"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:05:25Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:01Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PaymentServiceHighMemoryUsage (heap > 95%)"
+    },
+    {
+      "timestamp": "2026-09-30T14:06:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:07:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:08:45Z",
+      "level": "WARN",
+      "service": "ingress-controller",
+      "message": "Upstream error 500 returned for 38% of payment.internal requests"
+    },
+    {
+      "timestamp": "2026-09-30T14:09:20Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:10:05Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:11:15Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/refund 500 Internal Server Error - java.lang.OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:12:00Z",
+      "level": "WARN",
+      "service": "alertmanager",
+      "message": "ALERT firing: PaymentServiceHigh5xxErrorRate (error rate: 38.6%)"
+    },
+    {
+      "timestamp": "2026-09-30T14:13:20Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:14:05Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:00Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "GET /health 500 Internal Server Error - OutOfMemoryError: Java heap space"
+    },
+    {
+      "timestamp": "2026-09-30T14:15:30Z",
+      "level": "ERROR",
+      "service": "payment-service",
+      "message": "POST /api/v1/charge 500 Internal Server Error - java.lang.OutOfMemoryError: Java heap space"
+    }
+  ]
+}

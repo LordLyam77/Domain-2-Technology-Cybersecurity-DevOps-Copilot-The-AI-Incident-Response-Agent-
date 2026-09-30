@@ -36,8 +36,8 @@ class RemediationPlan:
         self.reasoning = reasoning
         self.fallback_action = fallback_action
         
-        # Human approval is strictly required for HIGH risk actions (like rollback)
-        self.requires_approval = (self.risk_level == "HIGH")
+        # Human approval is strictly required for HIGH and MEDIUM risk actions
+        self.requires_approval = (self.risk_level in ["HIGH", "MEDIUM"])
         self.approved: Optional[bool] = None
         self.execution_result: Optional[Dict[str, Any]] = None
 
@@ -60,8 +60,14 @@ class RemediationPlanner:
     """Evaluates risks, builds actionable remediation plans, and manages fallbacks."""
 
     RISK_CLASSIFICATION = {
-        "rollback": "HIGH",            # Reverts production binaries/config
-        "restart_service": "LOW",      # Soft restart of stateless containers
+        "rollback": "HIGH",                      # Reverts production binaries/config
+        "escalate_and_enable_fallback": "MEDIUM",# Switches payment routing provider
+        "escalate": "MEDIUM",
+        "failover_replica": "MEDIUM",            # Drains lagging database replica
+        "failover": "MEDIUM",
+        "investigate_further": "LOW",            # Requires operator decision
+        "investigate": "LOW",
+        "restart_service": "LOW",                # Soft restart of stateless containers
         "restart": "LOW",
         "scale_connections": "MEDIUM",
         "terminate_idle_conns": "HIGH"
@@ -69,7 +75,7 @@ class RemediationPlanner:
 
     @classmethod
     def classify_risk(cls, action_name: str) -> str:
-        """Determines whether an action is HIGH or LOW risk."""
+        """Determines whether an action is HIGH, MEDIUM, or LOW risk."""
         act = action_name.lower().strip()
         for key, level in cls.RISK_CLASSIFICATION.items():
             if key in act:
@@ -84,8 +90,32 @@ class RemediationPlanner:
         recommended = diagnosis.get("recommended_action", "").lower()
         root_cause = diagnosis.get("root_cause", "")
         service_name = "payment-service"
+        conf = diagnosis.get("confidence", {})
+        conf_score = conf.get("score", 100) if isinstance(conf, dict) else 100
 
-        if "rollback" in recommended:
+        if conf_score < 60 or "investigate" in recommended:
+            action = "investigate_further"
+            risk_level = "MEDIUM"
+            description = "Conflicting evidence detected between recent deploy and database replica lag. Operator decision required."
+            parameters = {
+                "conflicting_evidence": True,
+                "options": ["failover_replica", "rollback", "gather_more_info"],
+                "target_replica": "db-replica-02"
+            }
+            fallback = "failover_replica"
+        elif "failover" in recommended or "replica" in recommended:
+            action = "failover_replica"
+            risk_level = "MEDIUM"
+            description = f"Drain and fail over degraded database replica db-replica-02 to restore healthy read traffic."
+            parameters = {"service_name": service_name, "target_replica": "db-replica-02"}
+            fallback = "rollback"
+        elif "escalat" in recommended or "fallback" in recommended:
+            action = "escalate_and_enable_fallback"
+            risk_level = "MEDIUM"
+            description = f"Escalate vendor incident to third-party gateway NOC and enable secondary fallback provider for {service_name}."
+            parameters = {"service_name": service_name, "vendor": "PayGate Global", "fallback_provider": "StripeSecondary"}
+            fallback = "rollback"
+        elif "rollback" in recommended:
             action = "rollback"
             target_version = "v2.3.9"  # Default previous version
             risk_level = "HIGH"

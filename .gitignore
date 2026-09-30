@@ -18,3 +18,13 @@ ENV/
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+# Media & Presentation files
+*.webm
+*.mp4
+*.mov
+*.mkv
+*.pptx
+*.ppt
+temp_demo_recordings/
+temp_all_scenarios_rec/

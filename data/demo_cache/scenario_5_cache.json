@@ -1,0 +1,253 @@
+{
+  "scenario_id": "scenario_5",
+  "investigation_steps": [
+    {
+      "step_number": 1,
+      "type": "INVESTIGATION_STARTED",
+      "timestamp": "14:15:05",
+      "alert": "CRITICAL: payment-service error rate spiked to 32.4% with 500 Internal Server Error responses during account verification.",
+      "message": "DevOps Copilot agent initiated incident triage loop."
+    },
+    {
+      "step_number": 2,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:07",
+      "tool": "get_status",
+      "arguments": {
+        "service_name": "payment-service"
+      },
+      "message": "Invoking tool `get_status` with parameters: {'service_name': 'payment-service'}"
+    },
+    {
+      "step_number": 3,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:08",
+      "tool": "get_status",
+      "result_summary": "Status: CRITICAL | Error rate: 32.4% | Version: v2.4.2 | DB Health: DEGRADED (db-replica-02 LAGGING 480s)",
+      "result": {
+        "service": "payment-service",
+        "status": "CRITICAL",
+        "current_version": "v2.4.2",
+        "previous_version": "v2.4.1",
+        "error_rate": "32.4%",
+        "avg_latency_ms": 1850,
+        "active_db_connections": 18,
+        "max_db_connections": 50,
+        "db_health": "DEGRADED (Primary: OK, db-replica-01: OK, db-replica-02: LAGGING 480s)",
+        "failing_node": "db-replica-02"
+      }
+    },
+    {
+      "step_number": 4,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:10",
+      "tool": "get_deploys",
+      "arguments": {
+        "service_name": "payment-service",
+        "limit": 5
+      },
+      "message": "Invoking tool `get_deploys` with parameters: {'service_name': 'payment-service', 'limit': 5}"
+    },
+    {
+      "step_number": 5,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:11",
+      "tool": "get_deploys",
+      "result_summary": "Found recent deploy v2.4.2 deployed 10m ago by kevin@company.com ('Add Google Analytics 4 tags to payment receipt page')",
+      "result": [
+        {
+          "deploy_id": "dep-520",
+          "version": "v2.4.2",
+          "service": "payment-service",
+          "timestamp": "2026-09-30T14:05:00Z",
+          "author": "kevin@company.com",
+          "commit_hash": "4d1b80f",
+          "commit_msg": "Add Google Analytics 4 tags to payment receipt page (client telemetry update)",
+          "status": "DEPLOYED"
+        },
+        {
+          "deploy_id": "dep-510",
+          "version": "v2.4.1",
+          "service": "payment-service",
+          "timestamp": "2026-09-28T14:06:00Z",
+          "author": "sarah@company.com",
+          "commit_hash": "e1a4f09",
+          "commit_msg": "Update button copy on checkout modal to Complete Order",
+          "status": "DEPLOYED"
+        }
+      ]
+    },
+    {
+      "step_number": 6,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:13",
+      "tool": "get_logs",
+      "arguments": {
+        "service_name": "payment-service",
+        "level": "ERROR",
+        "limit": 15
+      },
+      "message": "Invoking tool `get_logs` with parameters: {'service_name': 'payment-service', 'level': 'ERROR', 'limit': 15}"
+    },
+    {
+      "step_number": 7,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:14",
+      "tool": "get_logs",
+      "result_summary": "Found 15 log entries (RecordNotFoundException on db-replica-02; conflict with recovery on db-replica-02...)",
+      "result": [
+        {
+          "timestamp": "2026-09-30T14:13:15Z",
+          "level": "ERROR",
+          "service": "payment-service",
+          "message": "RecordNotFoundException: Account 'acc_9021' not found on read-replica db-replica-02 (stale read: record created 210s ago on primary)"
+        },
+        {
+          "timestamp": "2026-09-30T14:14:10Z",
+          "level": "ERROR",
+          "service": "db-replica-02",
+          "message": "ERROR: cancelling statement due to conflict with recovery on db-replica-02 (User query clashed with WAL replay)"
+        },
+        {
+          "timestamp": "2026-09-30T14:15:05Z",
+          "level": "ERROR",
+          "service": "payment-service",
+          "message": "Read routing summary: db-replica-01 errors=0 (0%), db-replica-02 errors=680 (100% of queries directed to this replica fail)"
+        }
+      ]
+    },
+    {
+      "step_number": 8,
+      "type": "TOOL_CALL",
+      "timestamp": "14:15:16",
+      "tool": "get_past_incidents",
+      "arguments": {
+        "query": "replica"
+      },
+      "message": "Invoking tool `get_past_incidents` with parameters: {'query': 'replica'}"
+    },
+    {
+      "step_number": 9,
+      "type": "TOOL_RESULT",
+      "timestamp": "14:15:17",
+      "tool": "get_past_incidents",
+      "result_summary": "Found 1 past incident(s) INC-780",
+      "result": [
+        {
+          "id": "INC-780",
+          "title": "Postgres Read Replica Lag Causing Stale Account Verification 500s",
+          "root_cause": "Database replica db-replica-02 suffered 500s replication lag due to disk I/O contention, causing queries to read nonexistent newly-created records. The recent deploy was an unrelated analytics tracking tag.",
+          "resolution": "Engineers initially considered rolling back, but low confidence and conflicting logs revealed the true cause. SRE failed over the lagging replica (failover_replica) and drained traffic to healthy replica db-replica-01. Service recovered immediately."
+        }
+      ]
+    },
+    {
+      "step_number": 10,
+      "type": "INVESTIGATION_CONCLUDED",
+      "timestamp": "14:15:19",
+      "message": "Agent detected conflicting evidence between deployment timeline and replica infrastructure telemetry. Calibrating low confidence."
+    }
+  ],
+  "diagnosis": {
+    "root_cause": "Conflicting evidence: Deployment v2.4.2 occurred 10 minutes prior to error onset, but error telemetry isolates 100% of failures to stale reads on a lagging database replica (db-replica-02, lag: 480s), while the deployment commit modified only client-side analytics tags. Rolling back may be unnecessary or ineffective.",
+    "evidence": [
+      "Deployment dep-520 (v2.4.2) occurred at 14:05:00 UTC, approximately 8-10 minutes before the 500 error spike at 14:13-14:15 UTC.",
+      "Git commit notes for v2.4.2 (commit 4d1b80f) state: 'Add Google Analytics 4 tags to payment receipt page (client telemetry update)', which is completely unrelated to backend account verification or database schemas.",
+      "Application error logs explicitly isolate failures to 'db-replica-02': 'RecordNotFoundException' and 'cancelling statement due to conflict with recovery'.",
+      "Companion read-replica 'db-replica-01' has 0 errors and nominal 0.4s replication lag, and primary postgres node has 0 errors.",
+      "Historical postmortem INC-780 documents an identical scenario where an unrelated frontend deploy coincided with replica lag, and rolling back failed to restore service."
+    ],
+    "reasoning": "The temporal proximity of deployment v2.4.2 creates a strong initial suspicion of code regression. However, the technical error signature ('conflict with recovery', replication delay 480s) is strictly an infrastructure database replication bottleneck on db-replica-02. Rolling back v2.4.2 would take time and may fail to resolve the outage because the lagging replica remains out-of-sync. Therefore, confidence is low, and human evaluation is required to choose between a defensive rollback, failing over the replica, or deeper diagnostics.",
+    "confidence": {
+      "score": 52,
+      "explanation": "Low confidence (52/100): Conflicting signals exist. Deployment v2.4.2 occurred 10m ago, but all errors are isolated to PostgreSQL replica lag on db-replica-02 with an unrelated commit message."
+    },
+    "conflicting_or_missing_info": "CONFLICT: Timing matches deployment v2.4.2, BUT log evidence isolates failures exclusively to db-replica-02 replication lag with unrelated analytics commit notes.",
+    "recommended_action": "investigate_further",
+    "risk_level": "LOW"
+  },
+  "plan": {
+    "action": "investigate_further",
+    "risk_level": "LOW",
+    "requires_approval": true,
+    "target_service": "payment-service",
+    "description": "Conflicting evidence detected. Operator decision required: Choose whether to fail over the lagging replica, roll back v2.4.2 anyway, or collect deeper telemetry.",
+    "parameters": {
+      "conflicting_evidence": true,
+      "options": ["failover_replica", "rollback", "gather_more_info"],
+      "failing_node": "db-replica-02"
+    },
+    "reasoning": "Confidence is below 60% due to contradictory deployment and replica lag signals. Human operator must choose remediation path.",
+    "fallback_action": "failover_replica"
+  },
+  "secondary_investigation": {
+    "investigation_steps": [
+      {
+        "step_number": 1,
+        "type": "INVESTIGATION_STARTED",
+        "timestamp": "14:16:10",
+        "alert": "Rollback to v2.4.1 completed, but 500 errors persist at 32.4%.",
+        "message": "Secondary investigation initiated. Deployment hypothesis disproven; investigating replica telemetry."
+      },
+      {
+        "step_number": 2,
+        "type": "TOOL_CALL",
+        "timestamp": "14:16:12",
+        "tool": "get_status",
+        "arguments": {
+          "service_name": "payment-service"
+        },
+        "message": "Invoking tool `get_status` with parameters: {'service_name': 'payment-service'}"
+      },
+      {
+        "step_number": 3,
+        "type": "TOOL_RESULT",
+        "timestamp": "14:16:13",
+        "tool": "get_status",
+        "result_summary": "Status: CRITICAL | Error rate: 32.4% | Failing node: db-replica-02 (Lag: 480s)",
+        "result": {
+          "service": "payment-service",
+          "status": "CRITICAL",
+          "error_rate": "32.4%",
+          "failing_node": "db-replica-02"
+        }
+      },
+      {
+        "step_number": 4,
+        "type": "INVESTIGATION_CONCLUDED",
+        "timestamp": "14:16:15",
+        "message": "Secondary investigation concluded: Disproved deploy regression. True failure is stale reads on db-replica-02."
+      }
+    ],
+    "diagnosis": {
+      "root_cause": "Rollback to v2.4.1 failed to resolve 500 errors. As suspected during initial triage, the deployment was unrelated client analytics tags. 100% of errors are caused by replication lag on db-replica-02. Failing over db-replica-02 is required.",
+      "evidence": [
+        "Rollback to v2.4.1 finished, but error rate remained elevated at 32.4%.",
+        "Database read errors strictly affect db-replica-02 due to 480s replication delay.",
+        "Healthy replica db-replica-01 continues to serve queries with 0 errors."
+      ],
+      "reasoning": "The failed rollback conclusively proves application code is not the cause. Read traffic must be diverted away from db-replica-02 to restore service health.",
+      "confidence": {
+        "score": 96,
+        "explanation": "High confidence after hypothesis elimination: Rollback confirmed deploy was harmless. Failing over replica-02 directly removes all failing queries."
+      },
+      "conflicting_or_missing_info": "None",
+      "recommended_action": "failover_replica",
+      "risk_level": "MEDIUM"
+    },
+    "plan": {
+      "action": "failover_replica",
+      "risk_level": "MEDIUM",
+      "requires_approval": true,
+      "target_service": "payment-service",
+      "description": "Drain lagging replica db-replica-02 and route all queries to healthy replica db-replica-01.",
+      "parameters": {
+        "service_name": "payment-service",
+        "target_replica": "db-replica-02"
+      },
+      "reasoning": "Draining the lagging replica immediately eliminates 500 errors on account verification queries.",
+      "fallback_action": "escalate_to_database_dba"
+    }
+  },
+  "report_markdown": "# Incident Postmortem Report: INC-20260930-05\n\n## 1. Executive Summary\nOn September 30, 2026, at 14:15:00 UTC, **payment-service** experienced an elevated 500 error rate of **32.4%** affecting account verification requests (`/v1/accounts/verify`). An automated investigation flagged **conflicting evidence**: while deployment **v2.4.2** occurred 10 minutes prior, diagnostic logs isolated 100% of query errors to replication lag on database node **`db-replica-02`** (lag: **480 seconds**). Because confidence was low (**52%**), the agent flagged the conflict to the human operator. The operator selected **`failover_replica`**, draining `db-replica-02` and routing read traffic to healthy node `db-replica-01`. The service immediately recovered with error rates dropping to **0.2%**.\n\n---\n\n## 2. Incident Timeline\n- **14:00:10 UTC** - Account verification traffic healthy across db-replica-01 and db-replica-02 (latency 14ms).\n- **14:05:00 UTC** - Deployment `dep-520` (v2.4.2) deployed by Kevin ('Add Google Analytics 4 tags to payment receipt page').\n- **14:10:00 UTC** - EBS I/O burst on `db-replica-02` delays WAL segment replay.\n- **14:12:00 UTC** - Replication delay on `db-replica-02` exceeds 300 seconds.\n- **14:13:15 UTC** - First `RecordNotFoundException` logged on `db-replica-02` due to stale reads.\n- **14:14:10 UTC** - `ERROR: cancelling statement due to conflict with recovery` logged on `db-replica-02`.\n- **14:15:00 UTC** - Alertmanager fires `PaymentServiceHigh5xxErrorRate` (error rate: 32.4%).\n- **14:15:05 UTC** - DevOps Copilot agent initiates triage.\n- **14:15:19 UTC** - Agent detects conflicting evidence and reports **LOW CONFIDENCE (52%)**; presents human decision options.\n- **14:15:40 UTC** - Operator authorizes `failover_replica` on `db-replica-02`.\n- **14:15:45 UTC** - Stale replica drained from rotation; queries cut over to `db-replica-01`.\n- **14:16:05 UTC** - Verification confirms service health `HEALTHY`; error rate dropped to 0.2%.\n\n---\n\n## 3. Root Cause Analysis\nHeavy disk I/O contention on read-replica `db-replica-02` caused WAL replay to stall, resulting in an 8-minute replication lag. When payment-service queried `db-replica-02` to verify newly-created accounts, records were absent, returning 500 errors. Although release `v2.4.2` occurred 10 minutes prior, commit `4d1b80f` contained only frontend analytics tags and was wholly unrelated to the outage.\n\n---\n\n## 4. Key Evidence & Telemetry\n- **Temporal Coincidence**: Release v2.4.2 at 14:05:00 UTC vs error onset at 14:13:00 UTC.\n- **Commit Analysis**: Commit `4d1b80f` modified only receipt page HTML templates (no DB queries).\n- **Node Telemetry**: `db-replica-02` recorded 680 errors and 480s lag; `db-replica-01` recorded 0 errors and 0.4s lag.\n- **Postgres Log**: `cancelling statement due to conflict with recovery` on `db-replica-02`.\n\n---\n\n## 5. Action Taken & Approval Audit\n- **Action Executed**: Database Replica Failover (`failover_replica`).\n- **Target Node**: `db-replica-02` removed from read pool; traffic routed to `db-replica-01`.\n- **Risk Level**: `MEDIUM`\n- **Decision Rationale**: Operator selected replica failover after AI highlighted low confidence in rollback hypothesis.\n\n---\n\n## 6. Verification & Recovery\n- **Health Status**: Recovered to `HEALTHY`.\n- **Error Rate**: Dropped from `32.4%` to `0.2%`.\n- **Average Latency**: Reduced from `1,850ms` to `15ms`.\n- **Replica Health**: Active read traffic served 100% by healthy `db-replica-01`.\n\n---\n\n## 7. Follow-up Recommendations\n1. **Automated Replica Health Routing**: Configure database connection pool to automatically bypass replicas with > 15s replication lag.\n2. **Replica Provisioned IOPS**: Upgrade storage volumes on read replicas to prevent WAL replay stalls under I/O bursts.\n3. **Confidence-Driven Runbooks**: Standardize SRE runbooks ensuring low-confidence alerts (>40% ambiguity) require multi-path human triage."
+}

@@ -188,6 +188,9 @@ with st.sidebar:
         f"Target: <span style='color:#C9D1D9;'>{env.service_name}</span><br>"
         f"Env: <span style='color:#C9D1D9;'>{env.scenario_id}</span><br>"
         f"Engine: <span style='color:#58A6FF;'>{active_engine}</span>"
+        f"</div>"
+        f"<div style='margin-top:0.75rem;'>"
+        f"<span class='frontend-badge'>💻 Frontend Integration · Marc Samuel</span>"
         f"</div>",
         unsafe_allow_html=True
     )
@@ -221,12 +224,13 @@ with col_head_right:
     is_offline = st.session_state.is_demo_active or st.session_state.demo_mode
     pill_mode = "DEMO MODE" if is_offline else "LIVE AGENT"
     pill_class = "pill-demo" if is_offline else "pill-live"
+    dot_class = "status-dot-warning" if is_offline else "status-dot-healthy"
     engine_name = "Offline Cache" if is_offline else os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
     
     st.markdown(
         f"<div class='header-bar' style='justify-content:flex-end;'>"
         f"<div class='header-pill-container'>"
-        f"<span class='header-pill {pill_class}'>● {pill_mode}</span>"
+        f"<span class='header-pill {pill_class}'><span class='{dot_class}'></span>{pill_mode}</span>"
         f"<span class='header-model-pill'>{engine_name}</span>"
         f"</div>"
         f"</div>",
@@ -345,7 +349,7 @@ else:
         st.markdown(
             f"<div class='alert-banner'>"
             f"<div>"
-            f"<div class='alert-banner-title'>CRITICAL INCIDENT ALERT</div>"
+            f"<div class='alert-banner-title'><span class='status-dot-critical'></span>CRITICAL INCIDENT ALERT</div>"
             f"<div class='alert-banner-desc'>{alert_desc}</div>"
             f"</div>"
             f"<div class='alert-banner-meta'>"

@@ -203,6 +203,77 @@ p, span, label, div {
     font-family: 'JetBrains Mono', monospace;
 }
 
+/* Pulse Animations & Status Indicator Dots */
+@keyframes pulse-dot {
+    0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.7); }
+    70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(248, 81, 73, 0); }
+    100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); }
+}
+
+@keyframes pulse-green {
+    0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(46, 160, 67, 0.7); }
+    70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(46, 160, 67, 0); }
+    100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
+}
+
+@keyframes pulse-amber {
+    0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(210, 153, 34, 0.7); }
+    70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 6px rgba(210, 153, 34, 0); }
+    100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(210, 153, 34, 0); }
+}
+
+.status-dot-critical {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--status-critical);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.status-dot-healthy {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--status-healthy);
+    border-radius: 50%;
+    animation: pulse-green 2s infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.status-dot-warning {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--status-warning);
+    border-radius: 50%;
+    animation: pulse-amber 2s infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.frontend-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--accent-blue);
+    background: var(--accent-blue-tint);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+
+.frontend-badge:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 8px rgba(88, 166, 255, 0.25);
+}
+
 /* ==========================================================================
    3. HORIZONTAL PROGRESS STEPPER
    ========================================================================== */

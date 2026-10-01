@@ -13,14 +13,22 @@ import os
 import json
 import time
 from typing import Dict, Any, Optional
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-from google import genai
-from google.genai import types
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    types = None
+    GENAI_AVAILABLE = False
 
 from .gemini_gateway import GeminiGateway, is_demo_mode_env
-
-load_dotenv()
 
 
 REPORT_SYSTEM_PROMPT = """You are a Principal Site Reliability Engineer (SRE).
@@ -64,9 +72,9 @@ def generate_incident_report(
     scenario = incident_record.get("scenario", "scenario_1")
     gateway = GeminiGateway(demo_mode=demo_mode)
 
-    # 1. DEMO MODE SAFETY NET: If demo mode is active, return cached report immediately
-    if gateway.demo_mode:
-        print("[Reporter] DEMO_MODE active. Returning verified cached incident report.", flush=True)
+    # 1. DEMO MODE SAFETY NET: If demo mode is active or SDK unavailable, return cached report immediately
+    if gateway.demo_mode or not GENAI_AVAILABLE or genai is None:
+        print("[Reporter] DEMO_MODE active or SDK unavailable. Returning verified cached incident report.", flush=True)
         return {
             "report_markdown": gateway.get_cached_report(scenario),
             "is_demo": True,

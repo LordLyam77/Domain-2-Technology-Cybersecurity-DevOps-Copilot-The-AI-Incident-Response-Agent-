@@ -21,10 +21,20 @@ import os
 import json
 import time
 from typing import Dict, Any, List, Optional, Callable
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-from google import genai
-from google.genai import types
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    types = None
+    GENAI_AVAILABLE = False
 
 from simulation.environment import (
     get_environment,
@@ -33,9 +43,6 @@ from simulation.environment import (
 from .prompts import INVESTIGATION_SYSTEM_PROMPT, FINAL_SYNTHESIS_PROMPT
 from .planner import RemediationPlanner, RemediationPlan
 from .gemini_gateway import GeminiGateway, is_demo_mode_env
-
-# Load environment variables
-load_dotenv()
 
 
 class IncidentCoordinator:
@@ -85,8 +92,11 @@ class IncidentCoordinator:
             "get_past_incidents": self.env.get_past_incidents,
         }
 
-    def _build_tool_declarations(self) -> types.Tool:
+    def _build_tool_declarations(self) -> Optional[Any]:
         """Declares the 4 diagnostic tools with schema descriptions."""
+        if not GENAI_AVAILABLE or types is None:
+            return None
+
         get_status_decl = types.FunctionDeclaration(
             name="get_status",
             description="Fetches the live health metrics, status (HEALTHY, CRITICAL, DEGRADED), error rate, active connections, and version of a service.",
@@ -275,17 +285,6 @@ class IncidentCoordinator:
                 "Drop that previous assumption. Investigate the deeper root cause."
             )
 
-        # Initialize conversation contents with system prompt and alert
-        tool_config = types.GenerateContentConfig(
-            system_instruction=INVESTIGATION_SYSTEM_PROMPT,
-            tools=[self.tools],
-            temperature=0.1
-        )
-
-        contents: List[types.Content] = [
-            types.Content(role="user", parts=[types.Part.from_text(text=user_prompt)])
-        ]
-
         log_step("INVESTIGATION_STARTED", {
             "alert": alert_description,
             "message": "DevOps Copilot agent initiated incident triage loop."
@@ -295,7 +294,7 @@ class IncidentCoordinator:
         # 0. DEMO MODE OR NO CLIENT: PLAYBACK VERIFIED CACHE
         # ---------------------------------------------------------------------
         scenario_id = getattr(self.env, "scenario_id", "scenario_1")
-        if self.demo_mode or self.client is None:
+        if self.demo_mode or self.client is None or not GENAI_AVAILABLE or types is None:
             print(f"[Coordinator] Executing via Demo Safety Net (scenario: {scenario_id}).", flush=True)
             cached_res = self.gateway.get_cached_investigation(
                 scenario=scenario_id,
@@ -315,6 +314,17 @@ class IncidentCoordinator:
                 "iterations_used": len(cached_res.get("steps", [])),
                 "is_demo": True
             }
+
+        # Initialize conversation contents with system prompt and alert
+        tool_config = types.GenerateContentConfig(
+            system_instruction=INVESTIGATION_SYSTEM_PROMPT,
+            tools=[self.tools],
+            temperature=0.1
+        )
+
+        contents: List[types.Content] = [
+            types.Content(role="user", parts=[types.Part.from_text(text=user_prompt)])
+        ]
 
         try:
             # -----------------------------------------------------------------

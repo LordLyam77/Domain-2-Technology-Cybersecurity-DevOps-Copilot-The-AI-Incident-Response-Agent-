@@ -174,6 +174,26 @@ class RemediationPlanner:
                 reasoning=f"Previous plan '{current_plan.action}' was rejected or ineffective ({reason_rejected_or_failed}). A restart is low risk and may release local hung sockets.",
                 fallback_action="escalate_to_human_sre"
             )
+        elif current_plan.action == "escalate_and_enable_fallback":
+            return RemediationPlan(
+                action="rollback",
+                risk_level="HIGH",
+                target_service=service,
+                description=f"Fallback Option: Roll back {service} to v2.4.0 as secondary mitigation.",
+                parameters={"service_name": service, "target_version": "v2.4.0"},
+                reasoning=f"Vendor escalation / provider fallback rejected or ineffective ({reason_rejected_or_failed}). Rolling back to test application layer.",
+                fallback_action="escalate_to_human_sre"
+            )
+        elif current_plan.action == "failover_replica":
+            return RemediationPlan(
+                action="rollback",
+                risk_level="HIGH",
+                target_service=service,
+                description=f"Fallback Option: Roll back {service} to v2.4.1 to rule out client-side changes.",
+                parameters={"service_name": service, "target_version": "v2.4.1"},
+                reasoning=f"Replica failover rejected or ineffective ({reason_rejected_or_failed}). Initiating rollback to test client layer.",
+                fallback_action="escalate_to_human_sre"
+            )
         else:
             # If restart was tried and failed, next best option is rollback
             return RemediationPlan(

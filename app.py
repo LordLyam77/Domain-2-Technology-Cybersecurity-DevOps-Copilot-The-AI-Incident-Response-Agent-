@@ -15,7 +15,11 @@ import json
 import time
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 from simulation.environment import (
     reset_environment,
@@ -33,9 +37,6 @@ from agent.planner import RemediationPlanner, RemediationPlan
 from agent.reporter import generate_incident_report
 from agent.gemini_gateway import is_demo_mode_env
 from styles import CUSTOM_CSS
-
-# Load environment configuration
-load_dotenv()
 
 # Page configuration
 st.set_page_config(
